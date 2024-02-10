@@ -4,13 +4,15 @@
 
 [**Paper**](https://arxiv.org/abs/2306.05872) | [**Project Page**](https://samsunglabs.github.io/NeuralHaircut/)
 
+<p align="left"> 
+<img src="./docs/static/images/neuralhaircut.png" width="500">
+</p>
 
+This repository contains official inference code for Neural Haircut. 
 
-This repository contains official inference code for Neural Haircut.
+<strong>This code helps you to create strand-based hairstyle using multi-view images or monocular video. </strong>
 
-This code helps you to create strand-based hairstyle using multi-view images or monocular video. 
-
-
+To obtain raw data and reconstructions used in the paper, please contact us via email <a href="vanessasclearova@gmail.com">vanessasclearova@gmail.com</a>.
 
 
 ## Getting started
