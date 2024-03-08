@@ -6,11 +6,11 @@ import contextlib
 import random
 
 
-def scale_mat(mat, scale_factor):
-    mat[0, 0] /= scale_factor
-    mat[1, 1] /= scale_factor
-    mat[0, 2] /= scale_factor
-    mat[1, 2] /= scale_factor
+def scale_mat(mat, scale_factor_H, scale_factor_W):
+    mat[0, 0] /= scale_factor_W
+    mat[1, 1] /= scale_factor_H
+    mat[0, 2] /= scale_factor_W
+    mat[1, 2] /= scale_factor_H
     return mat
 
 def positional_encoding(

@@ -13,7 +13,7 @@ from pytorch3d.renderer import TexturesVertex, look_at_view_transform
 from pytorch3d.io import load_ply, save_ply
 
 sys.path.append(os.path.join(sys.path[0], '..'))
-from src.models.dataset import Dataset, MonocularDataset
+from src.models.dataset import Dataset, MonocularDataset, CustomDataset
 
 import argparse
 import yaml
@@ -63,7 +63,7 @@ def main(args):
     
     scene_type = args.scene_type
     case = args.case
-    save_path = f'./implicit-hair-data/data/{scene_type}/{case}'
+    save_path = os.path.join(args.path_to_data, f'{scene_type}/{case}')
                              
     # upload mesh hair and bust
     verts, faces = load_ply(os.path.join(save_path, 'final_hair.ply'))
@@ -73,8 +73,10 @@ def main(args):
     
     mesh_head =  Meshes(verts=[(verts_).float().to(args.device)], faces=[faces_.to(args.device)])
 
+    H, W = args.img_size
+    
     raster_settings_mesh = RasterizationSettings(
-                        image_size=args.img_size, 
+                        image_size=(int(H), int(W)), 
                         blur_radius=0.000, 
                         faces_per_pixel=1, 
                     )
@@ -83,7 +85,7 @@ def main(args):
     R = torch.ones(1, 3, 3)
     t = torch.ones(1, 3)
     cam_intr = torch.ones(1, 4, 4)
-    size = torch.tensor([args.img_size, args.img_size ]).to(args.device)
+    size = torch.tensor([int(H), int(W)]).to(args.device)
 
     cam = cameras_from_opencv_projection(
                                         camera_matrix=cam_intr.cuda(), 
@@ -110,8 +112,13 @@ def main(args):
 
     if scene_type == 'h3ds':
         dataset = Dataset(conf['dataset'])
+    
+    elif scene_type=='monocular':    
+        dataset = CustomDataset(conf['dataset'])
+        
     else:
-        dataset = MonocularDataset(conf['dataset'])
+        pass
+    
 
 
     # add upper cameras for h3ds data as they haven't got such views
@@ -145,14 +152,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(conflict_handler='resolve')
 
     parser.add_argument('--conf_path', default='./configs/monocular/neural_strands.yaml', type=str)
-    
+    parser.add_argument('--path_to_data', default='./implicit_hair_data/data', type=str)
     parser.add_argument('--case', default='person_1', type=str)
     
     parser.add_argument('--scene_type', default='monocular', type=str) 
     
     parser.add_argument('--device', default='cuda', type=str)
     
-    parser.add_argument('--img_size', default=2160, type=int)
+    parser.add_argument('--img_size', default=[2160, 2160], nargs="+")
     parser.add_argument('--n_views', default=2, type=int)
     
     args, _ = parser.parse_known_args()
