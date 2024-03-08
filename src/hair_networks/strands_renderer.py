@@ -1,7 +1,7 @@
 import sys
 import os
 
-from npbgpp.npbgplusplus.modeling.refiner.unet import RefinerUNet
+from src.hair_networks.unet import RefinerUNet
 
 from pytorch3d.io import load_obj, load_ply, save_obj
 import cv2
@@ -29,7 +29,8 @@ class Renderer(nn.Module):
     ):
         super(Renderer, self).__init__()
             
-        self.image_size = config.get('image_size', 512)
+        self.image_size_H = config.get('image_size_H', 512)
+        self.image_size_W = config.get('image_size_W', 512)
         self.out_channels = config.get('out_channels', -1)
         self.logging_freq = config.get('logging_freq', 5000)
         self.feat_size = config.get('feat_size', -1)
@@ -51,7 +52,8 @@ class Renderer(nn.Module):
         
         # Init rasterizers and renderers
         self.rasterizer = QuadRasterizer(
-                                    render_size=self.image_size,
+                                    render_size_H=self.image_size_H,
+                                    render_size_W=self.image_size_W,
                                     feats_dim=self.feat_size + self.use_silh,
                                     head_mesh=(verts, occlusion_faces),
                                     use_silh=self.use_silh,
@@ -102,7 +104,7 @@ class Renderer(nn.Module):
             # Project orients and points from 3d to 2d with camera
             projected_orients = project_orient_to_camera(hard_orients.unsqueeze(1), strands_origins, cam_intr=raster_dict['cam_intr'],  cam_extr=raster_dict['cam_extr']) 
 
-            plane_orients = torch.zeros(self.image_size, self.image_size, 1, device=hard_orients.device)
+            plane_orients = torch.zeros(self.image_size_H, self.image_size_W, 1, device=hard_orients.device)
             plane_orients[r[0]!=-1, :] = projected_orients
             raster_dict['pred_orients'] = plane_orients.permute(2, 0, 1)
 

@@ -15,7 +15,8 @@ class QuadRasterizer(torch.nn.Module):
 
     def __init__(
         self,
-        render_size: int,
+        render_size_H: int,
+        render_size_W: int,
         feats_dim: int,
         antialiasing_factor: int = 1,
         head_mesh: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
@@ -31,13 +32,14 @@ class QuadRasterizer(torch.nn.Module):
 
         self.use_orients_cond = use_orients_cond
         self.use_silh = use_silh
-        self.render_size = render_size
+        self.render_size_H = render_size_H
+        self.render_size_W = render_size_W
         self.feats_dim = feats_dim
         self.antialiasing_factor = antialiasing_factor
         self.use_gpu = use_gpu
 
         raster_settings = RasterizationSettings(
-            image_size=self.render_size * antialiasing_factor,
+            image_size=(int(self.render_size_H * antialiasing_factor), int(self.render_size_W * antialiasing_factor)),
             blur_radius=1e-4,
             faces_per_pixel=faces_per_pixel,
             bin_size=0,
@@ -56,7 +58,6 @@ class QuadRasterizer(torch.nn.Module):
         self.rasterizer = MeshRasterizer(raster_settings=raster_settings)
         
         self.shader = SoftShader(
-            image_size=render_size,
             feats_dim=feats_dim,
             sigma=1e-5,
             gamma=1e-5,
@@ -76,7 +77,7 @@ class QuadRasterizer(torch.nn.Module):
             camera_matrix=cam_intr.unsqueeze(0),
             R=cam_extr[:3, :3].unsqueeze(0),
             tvec=cam_extr[:3, 3].unsqueeze(0),
-            image_size=torch.tensor([self.render_size, self.render_size]).unsqueeze(0)
+            image_size=torch.tensor([self.render_size_H, self.render_size_W]).unsqueeze(0)
         ).cuda()
 
         hair_verts, hair_faces, indices = build_quads(hair @ cameras.R[0], w=0.0005)

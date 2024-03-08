@@ -12,7 +12,6 @@ class SoftShader(ShaderBase):
 
     def __init__(
         self,
-        image_size: int,
         feats_dim: int = 32,
         sigma: float = 1e-3,
         gamma: float = 1e-5,
@@ -27,7 +26,6 @@ class SoftShader(ShaderBase):
         super().__init__(**kwargs)
         
         self.use_orients_cond = use_orients_cond
-        self.image_size = image_size
         self.feats_dim = feats_dim
         self.sigma = sigma
         self.gamma = gamma
