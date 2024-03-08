@@ -10,6 +10,3 @@
 [submodule "CDGNet"]
 	path = CDGNet
 	url = https://github.com/tjpulkl/CDGNet.git
-[submodule "npbgpp"]
-	path = npbgpp
-	url = https://github.com/rakhimovv/npbgpp.git
