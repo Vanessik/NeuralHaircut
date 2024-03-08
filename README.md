@@ -27,18 +27,11 @@ conda env create -n neuralhaircut -f neural_haircut.yaml
 conda activate neuralhaircut
 ```
 
-Initialize submodules of [k-diffusion](https://github.com/crowsonkb/k-diffusion), [NeuS](https://github.com/Totoro97/NeuS), [MODNet](https://github.com/ZHKKKe/MODNet), [CDGNet](https://github.com/tjpulkl/CDGNet), [npbgpp](https://github.com/rakhimovv/npbgpp). Download pretrained weights for [CDGNet](https://github.com/tjpulkl/CDGNet) and [MODNet](https://github.com/ZHKKKe/MODNet).
+Initialize submodules of [k-diffusion](https://github.com/crowsonkb/k-diffusion), [NeuS](https://github.com/Totoro97/NeuS), [MODNet](https://github.com/ZHKKKe/MODNet), [CDGNet](https://github.com/tjpulkl/CDGNet). Download pretrained weights for [CDGNet](https://github.com/tjpulkl/CDGNet) and [MODNet](https://github.com/ZHKKKe/MODNet).
 
 ```bash
 git submodule update --init --recursive
 ```
-
-
-```bash
-cd npbgpp && python setup.py build develop
-cd ..
-```
-
 
 Download the pretrained NeuralHaircut models:
 
