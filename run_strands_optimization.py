@@ -17,7 +17,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import trimesh
-from src.models.dataset import Dataset, MonocularDataset
+from src.models.dataset import Dataset, MonocularDataset, CustomDataset
 from pyhocon import ConfigFactory
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -55,6 +55,7 @@ class Runner:
         
         self.end_iter = train_conf['end_iter']
         self.report_freq = train_conf['report_freq']
+        self.save_freq = train_conf['save_freq']
         self.batch_size = train_conf['batch_size']
         
         if exp_name is not None:
@@ -65,7 +66,8 @@ class Runner:
         else:
             self.base_exp_dir = self.conf['general']['base_exp_dir']
                  
-        self.img_size = self.hair_conf['render']['image_size']
+        self.img_size_H = self.hair_conf['render']['image_size_H']
+        self.img_size_W = self.hair_conf['render']['image_size_W']
         
         os.makedirs(self.base_exp_dir, exist_ok=True)                    
         os.makedirs(os.path.join(self.base_exp_dir, 'meshes'), exist_ok=True)
@@ -115,22 +117,26 @@ class Runner:
             _, cam_intr, cam_pose = self.dataset.gen_random_rays_at(cur_img, self.batch_size)
             cam_extr = torch.linalg.inv(cam_pose.detach())
 
-            orig_data_size = self.dataset.images[cur_img].shape[1] # H shape, suppose square images
+            orig_data_size_H, orig_data_size_W = self.dataset.images[cur_img].shape[0], self.dataset.images[cur_img].shape[1]  # H shape, suppose square images
+            
+#             print('image shape', self.dataset.images[cur_img].shape)
             
             raster_dict = {}
             raster_dict['iter'] = self.iter_step
             raster_dict['cam_extr'] = cam_extr
             
-            if orig_data_size is None:
+            if orig_data_size_H is None:
                 raster_dict['cam_intr'] = cam_intr
                 raster_dict['gt_silh'] = self.dataset.hair_masks[cur_img].permute(2, 0, 1).cuda()
                 raster_dict['gt_rgb'] = self.dataset.images[cur_img].permute(2, 0, 1).cuda()
             else:
                 # need to change cameras intrinsic as we render in resolution 512x512
-                scale_factor = orig_data_size / self.img_size
-                raster_dict['cam_intr'] = scale_mat(deepcopy(cam_intr), scale_factor)
-                raster_dict['gt_silh'] = F.interpolate(self.dataset.hair_masks[cur_img].permute(2, 0, 1)[None], size=self.img_size, mode='bilinear')[0].cuda()
-                raster_dict['gt_rgb'] = F.interpolate(self.dataset.images[cur_img].permute(2, 0, 1)[None], size=self.img_size, mode='bilinear')[0].cuda()
+                scale_factor_H = orig_data_size_H / self.img_size_H
+                scale_factor_W = orig_data_size_W / self.img_size_W
+                
+                raster_dict['cam_intr'] = scale_mat(deepcopy(cam_intr), scale_factor_H, scale_factor_W)
+                raster_dict['gt_silh'] = F.interpolate(self.dataset.hair_masks[cur_img].permute(2, 0, 1)[None], size=(self.img_size_H, self.img_size_W), mode='bilinear')[0].cuda()
+                raster_dict['gt_rgb'] = F.interpolate(self.dataset.images[cur_img].permute(2, 0, 1)[None], size=(self.img_size_H, self.img_size_W), mode='bilinear')[0].cuda()
 
             raster_dict['visual_gt_orients'] = self.dataset.orient_at(cur_img, resolution_level=1)
             
@@ -150,7 +156,7 @@ class Runner:
             if self.iter_step % len(image_perm) == 0:
                 image_perm = self.get_image_perm()
             
-            if self.iter_step % self.report_freq == 0:
+            if self.iter_step % self.save_freq == 0:
                 self.hair_primitives_trainer.save_weights(os.path.join(self.base_exp_dir, 'hair_primitives', 'ckpt_{:0>6d}.pth'.format(self.iter_step)))
                 
     

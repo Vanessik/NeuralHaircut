@@ -178,7 +178,7 @@ class OptimizableTexturedStrands(nn.Module):
             self.diffuse_mask = diffusion_cfg.get('diffuse_mask', None) 
             print('diffuse mask', self.diffuse_mask)
             
-            if self.diffuse_mask: 
+            if self.diffuse_mask is not None: 
                 self.diffuse_mask = torch.tensor(cv2.imread(self.diffuse_mask) / 255)[:, :, :1].squeeze(-1).cuda()
     
     def init_scalp_basis(self, scalp_uvs):         
@@ -196,7 +196,7 @@ class OptimizableTexturedStrands(nn.Module):
         bs = full_uvs.shape[0]
         concat_full_uvs = torch.cat((full_uvs, torch.zeros(bs, full_uvs.shape[1], 1, device=full_uvs.device)), -1)
         new_point = concat_full_uvs.mean(1).clone()
-        new_point[:, 0] += 0.001
+        new_point[:, 0] += 0.01
         bary_coords = barycentric_coordinates_of_projection(new_point, concat_full_uvs).unsqueeze(1)
         full_verts = scalp_verts[0][scalp_faces[0]]
         origin_t = (bary_coords @ full_verts).squeeze(1) - full_verts.mean(1)
